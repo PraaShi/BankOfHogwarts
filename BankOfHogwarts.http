@@ -1,0 +1,6 @@
+@BankOfHogwarts_HostAddress = http://localhost:5249
+
+GET {{BankOfHogwarts_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
