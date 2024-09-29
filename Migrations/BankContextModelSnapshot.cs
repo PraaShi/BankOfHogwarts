@@ -31,7 +31,6 @@ namespace BankOfHogwarts.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AccountId"));
 
                     b.Property<string>("AccountNumber")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("AccountTypeId")
@@ -49,6 +48,9 @@ namespace BankOfHogwarts.Migrations
                     b.Property<int>("CIBILScore")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("ClosedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -65,7 +67,8 @@ namespace BankOfHogwarts.Migrations
                     b.HasKey("AccountId");
 
                     b.HasIndex("AccountNumber")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[AccountNumber] IS NOT NULL");
 
                     b.HasIndex("AccountTypeId");
 
@@ -274,6 +277,10 @@ namespace BankOfHogwarts.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("CustomerId");
 
                     b.HasIndex("AadharNumber")
@@ -312,6 +319,11 @@ namespace BankOfHogwarts.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<string>("Gender")
+                        .IsRequired()
+                        .HasMaxLength(6)
+                        .HasColumnType("nvarchar(6)");
+
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -328,6 +340,10 @@ namespace BankOfHogwarts.Migrations
                         .HasColumnType("nvarchar(10)");
 
                     b.Property<string>("Position")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -359,6 +375,9 @@ namespace BankOfHogwarts.Migrations
                     b.Property<DateTime?>("ApprovedDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("ClosedDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime?>("DisbursementDate")
                         .HasColumnType("datetime2");
 
@@ -366,6 +385,10 @@ namespace BankOfHogwarts.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("LoanApplicationStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LoanFinalStatus")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -382,7 +405,6 @@ namespace BankOfHogwarts.Migrations
                         .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("Remarks")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("LoanId");
@@ -510,7 +532,7 @@ namespace BankOfHogwarts.Migrations
                     b.HasOne("BankOfHogwarts.Models.Account", "Account")
                         .WithMany("Loans")
                         .HasForeignKey("AccountId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("BankOfHogwarts.Models.Employee", "Employee")

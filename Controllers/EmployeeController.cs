@@ -77,6 +77,21 @@ namespace BankOfHogwarts.Controllers
             return Ok(new { message = $"Account has been {status} successfully." });
         }
 
+        [HttpGet("api/loans/all")]
+        public async Task<IActionResult> GetAllLoans()
+        {
+            try
+            {
+                var loans = await _employeeRepository.GetAllLoans(); // Call the method from your service layer
+                return Ok(loans);
+            }
+            catch (Exception ex)
+            {
+                // Handle the error as needed (logging, etc.)
+                return StatusCode(500, "Internal server error: " + ex.Message);
+            }
+        }
+
 
         // Manage Loan Requests (Approve/Reject based on credit score)
         [HttpPost("manage-loan-request/{loanId}")]
@@ -109,7 +124,7 @@ namespace BankOfHogwarts.Controllers
                 Console.WriteLine($"Loan {loanId} not found or disbursement failed.");
                 return NotFound("Loan or account not found or failed to disburse.");
             }
-            var loan = await _loanRepository.GetLoanById(loanId);
+            /*var loan = await _loanRepository.GetLoanById(loanId);
             if (loan == null || loan.Account == null || loan.Account.Customer == null)
             {
                 Console.WriteLine($"Error fetching customer details for Loan {loanId}.");
@@ -140,7 +155,7 @@ namespace BankOfHogwarts.Controllers
             catch (Exception ex)
             {
                 Console.WriteLine($"Loan {loanId} disbursed successfully, but failed to send email. Error: {ex.Message}");
-            }
+            }*/
 
             return Ok("Loan disbursed successfully.");
         }
@@ -160,7 +175,7 @@ namespace BankOfHogwarts.Controllers
             }
 
             log.Info($"Loan with LoanId: {loanId} closed successfully.");
-
+            /*
             var loan = await _loanRepository.GetLoanById(loanId);
             if (loan == null)
             {
@@ -194,7 +209,7 @@ namespace BankOfHogwarts.Controllers
             catch (Exception ex)
             {
                 log.Error($"Failed to send email notification to {customer.Email} for LoanId: {loanId}. Error: {ex.Message}");
-            }
+            }*/
 
             return Ok("Loan closed successfully.");
         }
@@ -212,7 +227,7 @@ namespace BankOfHogwarts.Controllers
         }
 
         // Manage Account Deletion Request (Approve/Reject)
-        [HttpDelete("manage-account-deletion/{accountId}")]
+        /*[HttpDelete("manage-account-deletion/{accountId}")]
         public async Task<IActionResult> ManageAccountDeletionRequest(int accountId)
         {
             log.Info($"Attempting to process account deletion request. AccountId: {accountId}");
@@ -226,7 +241,7 @@ namespace BankOfHogwarts.Controllers
 
             log.Info($"Account {accountId} deletion request processed successfully.");
             return Ok("Account deletion request processed successfully.");
-        }
+        }*/
 
         [HttpGet("financial-report")]
         public async Task<IActionResult> GetFinancialReport()
@@ -238,9 +253,23 @@ namespace BankOfHogwarts.Controllers
             return Ok(report);
         }
 
+        [HttpGet("all-accounts")]
+        public async Task<IActionResult> GetAllAccounts()
+        {
+            var accounts = await _employeeRepository.GetAllAccountsAsync();
+            return Ok(accounts);
+        }
+        // Controller (AccountController)
+        [HttpGet("accounts-by-status")]
+        public async Task<IActionResult> GetAccountsByStatus([FromQuery] AccountStatus? status)
+        {
+            var accounts = await _employeeRepository.GetAccountsByStatusAsync(status);
+            return Ok(accounts);
+        }
+
 
         [HttpPost("{accountId}/deactivate")]
-        public async Task<IActionResult> DeactivateAccount(int accountId)
+        public async Task<IActionResult> DeactivateAccount(int accountId,bool isApproved)
         {
             try
             {
@@ -249,7 +278,7 @@ namespace BankOfHogwarts.Controllers
 
                 log.Info($"Employee is attempting to deactivate account with AccountId: {accountId}");
 
-                var result = await _employeeRepository.DeactivateAccount(accountId);
+                var result = await _employeeRepository.DeactivateAccount(accountId, isApproved);
 
 
                 if (!result)

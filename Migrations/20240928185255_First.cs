@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace BankOfHogwarts.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialDb : Migration
+    public partial class First : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -76,7 +76,8 @@ namespace BankOfHogwarts.Migrations
                     AadharNumber = table.Column<string>(type: "nvarchar(12)", maxLength: 12, nullable: false),
                     Pan = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
                     Email = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Password = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -91,10 +92,12 @@ namespace BankOfHogwarts.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     FirstName = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     LastName = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    Gender = table.Column<string>(type: "nvarchar(6)", maxLength: 6, nullable: false),
                     Email = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
                     PhoneNumber = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
                     Position = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Password = table.Column<string>(type: "nvarchar(25)", maxLength: 25, nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
@@ -128,10 +131,11 @@ namespace BankOfHogwarts.Migrations
                     CustomerId = table.Column<int>(type: "int", nullable: false),
                     AccountTypeId = table.Column<int>(type: "int", nullable: false),
                     BranchId = table.Column<int>(type: "int", nullable: false),
-                    AccountNumber = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    AccountNumber = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     Balance = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     CIBILScore = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ClosedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     BeneficiaryId = table.Column<int>(type: "int", nullable: true)
                 },
@@ -198,10 +202,12 @@ namespace BankOfHogwarts.Migrations
                     Purpose = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: false),
                     ApplicationDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     LoanApplicationStatus = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Remarks = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Remarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     LoanStatus = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    LoanFinalStatus = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ApprovedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    DisbursementDate = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    DisbursementDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ClosedDate = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -211,7 +217,7 @@ namespace BankOfHogwarts.Migrations
                         column: x => x.AccountId,
                         principalTable: "Accounts",
                         principalColumn: "AccountId",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Loans_Employees_EmployeeId",
                         column: x => x.EmployeeId,
@@ -254,7 +260,8 @@ namespace BankOfHogwarts.Migrations
                 name: "IX_Accounts_AccountNumber",
                 table: "Accounts",
                 column: "AccountNumber",
-                unique: true);
+                unique: true,
+                filter: "[AccountNumber] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Accounts_AccountTypeId",

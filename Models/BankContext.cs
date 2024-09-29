@@ -61,6 +61,9 @@ namespace BankOfHogwarts.Models
                 .HasIndex(c => c.AadharNumber).IsUnique();
             modelBuilder.Entity<Customer>()
                 .HasIndex(c => c.Pan).IsUnique();
+            modelBuilder.Entity<Customer>()
+                    .Property(e => e.Status)
+                    .HasConversion<string>();
 
             //Employee Table
             modelBuilder.Entity<Employee>()
@@ -69,6 +72,9 @@ namespace BankOfHogwarts.Models
                 .HasIndex(e => e.PhoneNumber).IsUnique();
             modelBuilder.Entity<Employee>()
                 .Property(e => e.Position)
+                .HasConversion<string>();
+            modelBuilder.Entity<Employee>()
+                .Property(e => e.Status)
                 .HasConversion<string>();
 
 
@@ -137,6 +143,9 @@ namespace BankOfHogwarts.Models
                 .HasConversion<string>();
             modelBuilder.Entity<Loan>()
                 .Property(e => e.LoanStatus)
+                .HasConversion<string>();
+            modelBuilder.Entity<Loan>()
+                .Property(e => e.LoanFinalStatus)
                 .HasConversion<string>();
 
             modelBuilder.Entity<Loan>()

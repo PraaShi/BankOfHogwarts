@@ -3,8 +3,7 @@
     public enum LoanStatus
     {
         Pending,
-        Approved,
         Disbursed,
-        Closed 
+        Rejected
     }
 }

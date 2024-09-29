@@ -9,7 +9,7 @@ using log4net;
 namespace BankOfHogwarts.Controllers
 {
     //[Authorize]
-    [Route("api/[controller]")]
+    [Route("api/branch")]
     [ApiController]
     public class BranchController : ControllerBase
     {
@@ -24,7 +24,7 @@ namespace BankOfHogwarts.Controllers
         }
 
         // GET: api/Branch
-        [HttpGet]
+        [HttpGet("allBranch")]
         public async Task<ActionResult<IEnumerable<Branch>>> GetBranches()
         {
             log.Info("Fetching all branches");

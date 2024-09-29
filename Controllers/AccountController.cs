@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 namespace BankOfHogwarts.Controllers
 {
     //[Authorize]
-    [Route("api/[controller]")]
+    [Route("api/accountActions")]
     [ApiController]
     public class AccountController : ControllerBase
     {
@@ -51,7 +51,7 @@ namespace BankOfHogwarts.Controllers
             return Ok(transactions);
         }
 
-        [HttpPost("{id}/depositFunds")]
+        /*[HttpPost("{id}/depositFunds")]
         public async Task<IActionResult> DepositFunds(int id, [FromQuery] decimal amount, [FromQuery] string pin)
         {
             log.Info($"Attempting deposit for AccountId: {id} of amount: {amount}");
@@ -89,10 +89,65 @@ namespace BankOfHogwarts.Controllers
                 log.Error($"Error during deposit for AccountId: {id}, Message: {ex.Message}");
                 return BadRequest(ex.Message);
             }
+        }*/
+
+        [HttpPost("{id}/depositFunds")]
+        public async Task<IActionResult> DepositFunds(int id, [FromBody] DepositFundsDto depositFundsDto)
+        {
+            log.Info($"Attempting deposit for AccountId: {id} of amount: {depositFundsDto.Amount}");
+
+            if (depositFundsDto == null)
+            {
+                log.Error("Deposit request data is missing.");
+                return BadRequest("Invalid request data.");
+            }
+
+            if (id != depositFundsDto.AccountId)
+            {
+                log.Error($"Account ID mismatch. URL ID: {id}, DTO ID: {depositFundsDto.AccountId}");
+                return BadRequest("Account ID in the URL does not match the Account ID in the request body.");
+            }
+
+            try
+            {
+                var account = await _accountRepository.DisplayAccountDetails(id);
+                if (account == null)
+                {
+                    log.Error($"Account with Id: {id} not found.");
+                    return NotFound($"Account with Id: {id} not found.");
+                }
+
+                var customer = account.Customer;
+                if (customer == null)
+                {
+                    log.Error($"Customer for AccountId: {id} not found.");
+                    return NotFound($"Customer for AccountId: {id} not found.");
+                }
+
+                var transaction = await _accountRepository.DepositFund(id, depositFundsDto.Amount, depositFundsDto.Pin);
+                log.Info($"Deposit successful for AccountId: {id}, Amount: {depositFundsDto.Amount}");
+
+                string customerName = $"{customer.FirstName} {customer.LastName}";
+                string customerEmail = customer.Email;
+
+                /*NotifyUser.NotifyUserByEmail(
+                    customerName,
+                    customerEmail,
+                    "Bank Of Hogwarts Deposit Confirmation",
+                    $"Dear {customerName}, your deposit of {depositFundsDto.Amount:C} has been successfully processed.");*/
+
+                return Ok(transaction);
+            }
+            catch (ArgumentException ex)
+            {
+                log.Error($"Error during deposit for AccountId: {id}, Message: {ex.Message}");
+                return BadRequest(ex.Message);
+            }
         }
 
 
-        [HttpPost("{id}/withdrawFunds")]
+
+        /*[HttpPost("{id}/withdrawFunds")]
         public async Task<IActionResult> WithdrawFunds(int id, [FromQuery] decimal amount, [FromQuery] string pin)
         {
             log.Info($"Attempting withdrawal for AccountId: {id}, Amount: {amount}");
@@ -130,9 +185,64 @@ namespace BankOfHogwarts.Controllers
                 log.Error($"Error during withdrawal for AccountId: {id}, Message: {ex.Message}");
                 return BadRequest(ex.Message);
             }
+        }*/
+
+        [HttpPost("{id}/withdrawFunds")]
+        public async Task<IActionResult> WithdrawFunds(int id, [FromBody] WithdrawFundsDto withdrawFundsDto)
+        {
+            log.Info($"Attempting withdrawal for AccountId: {id}, Amount: {withdrawFundsDto.Amount}");
+
+            if (withdrawFundsDto == null)
+            {
+                log.Error("Withdrawal request data is missing.");
+                return BadRequest("Invalid request data.");
+            }
+
+            if (id != withdrawFundsDto.AccountId)
+            {
+                log.Error($"Account ID mismatch. URL ID: {id}, DTO ID: {withdrawFundsDto.AccountId}");
+                return BadRequest("Account ID in the URL does not match the Account ID in the request body.");
+            }
+
+            try
+            {
+                var account = await _accountRepository.DisplayAccountDetails(id);
+                if (account == null)
+                {
+                    log.Error($"Account with Id: {id} not found.");
+                    return NotFound($"Account with Id: {id} not found.");
+                }
+
+                var customer = account.Customer;
+                if (customer == null)
+                {
+                    log.Error($"Customer for AccountId: {id} not found.");
+                    return NotFound($"Customer for AccountId: {id} not found.");
+                }
+
+                var transaction = await _accountRepository.WithdrawFund(id, withdrawFundsDto.Amount, withdrawFundsDto.Pin);
+                log.Info($"Withdrawal successful for AccountId: {id}, Amount: {withdrawFundsDto.Amount}");
+
+                string customerName = $"{customer.FirstName} {customer.LastName}";
+                string customerEmail = customer.Email;
+
+                /*NotifyUser.NotifyUserByEmail(
+                    customerName,
+                    customerEmail,
+                    "Bank Of Hogwarts Withdrawal Confirmation",
+                    $"Dear {customerName}, your withdrawal of {withdrawFundsDto.Amount:C} has been successfully processed.");*/
+
+                return Ok(transaction);
+            }
+            catch (ArgumentException ex)
+            {
+                log.Error($"Error during withdrawal for AccountId: {id}, Message: {ex.Message}");
+                return BadRequest(ex.Message);
+            }
         }
 
-        [HttpPost("{id}/transferMoney")]
+
+        /*[HttpPost("{id}/transferMoney")]
         public async Task<IActionResult> TransferMoney(int id, [FromQuery] int beneficiaryId, [FromQuery] decimal amount, [FromQuery] string pin)
         {
             log.Info($"Attempting money transfer from AccountId: {id} to BeneficiaryId: {beneficiaryId}, Amount: {amount}");
@@ -173,12 +283,19 @@ namespace BankOfHogwarts.Controllers
                 log.Error($"Error during transfer for AccountId: {id}, Message: {ex.Message}");
                 return BadRequest(ex.Message);
             }
-        }
+        }*/
 
-        [HttpPost("{id}/change-pin")]
-        public async Task<IActionResult> ChangePin(int id, [FromQuery] string oldPin, [FromQuery] string newPin)
+        [HttpPost("{id}/transferMoney")]
+        public async Task<IActionResult> TransferMoney(int id, [FromBody] TransferMoneyDto transferMoneyDto)
         {
-            log.Info($"Attempting to change PIN for AccountId: {id}");
+            log.Info($"Attempting money transfer from AccountId: {id} to BeneficiaryId: {transferMoneyDto.BeneficiaryId}, Amount: {transferMoneyDto.Amount}");
+
+            if (transferMoneyDto == null)
+            {
+                log.Error("Transfer request data is missing.");
+                return BadRequest("Invalid request data.");
+            }
+
             try
             {
                 var account = await _accountRepository.DisplayAccountDetails(id);
@@ -187,6 +304,7 @@ namespace BankOfHogwarts.Controllers
                     log.Error($"Account with Id: {id} not found.");
                     return NotFound($"Account with Id: {id} not found.");
                 }
+
                 var customer = account.Customer;
                 if (customer == null)
                 {
@@ -194,26 +312,93 @@ namespace BankOfHogwarts.Controllers
                     return NotFound($"Customer for AccountId: {id} not found.");
                 }
 
-                var result = await _accountRepository.ChangePin(id, oldPin, newPin);
-                log.Info($"PIN change successful for AccountId: {id}");
+                var transaction = await _accountRepository.TransferMoney(id, transferMoneyDto.BeneficiaryId, transferMoneyDto.Amount, transferMoneyDto.Pin);
+
+                var beneficiaryName = await _accountRepository.GetBeneficiariesByAccountId(id);
+                var bname = beneficiaryName.FirstOrDefault(x => x.BeneficiaryId == transferMoneyDto.BeneficiaryId);
+
+                log.Info($"Money transfer successful from AccountId: {id} to Beneficiary Name: {bname.AccountName}, Amount: {transferMoneyDto.Amount}");
 
                 string customerName = $"{customer.FirstName} {customer.LastName}";
                 string customerEmail = customer.Email;
 
-                NotifyUser.NotifyUserByEmail(
+                /*NotifyUser.NotifyUserByEmail(
+                    customerName,
+                    customerEmail,
+                    "Bank Of Hogwarts Money Transfer Confirmation",
+                    $"Dear {customerName}, your transfer of {transferMoneyDto.Amount:C} to Beneficiary Name: {bname.AccountName} has been successfully processed.");*/
+
+                return Ok(transaction);
+            }
+            catch (ArgumentException ex)
+            {
+                log.Error($"Error during transfer for AccountId: {id}, Message: {ex.Message}");
+                return BadRequest(ex.Message);
+            }
+        }
+
+
+
+
+
+        [HttpPost("{accountId}/change-pin")]
+        public async Task<IActionResult> ChangePin(int accountId, [FromBody] ChangePinDto changePinDto)
+        {
+            log.Info($"Attempting to change PIN for AccountId: {accountId}");
+
+            try
+            {
+                // Validate the incoming DTO data (optional, if using fluent validation or attributes)
+                if (changePinDto == null)
+                {
+                    log.Error("ChangePinDto is null.");
+                    return BadRequest("Invalid data received.");
+                }
+
+                // Display the account details
+                var account = await _accountRepository.DisplayAccountDetails(accountId);
+                if (account == null)
+                {
+                    log.Error($"Account with Id: {accountId} not found.");
+                    return NotFound($"Account with Id: {accountId} not found.");
+                }
+
+                var customer = account.Customer;
+                if (customer == null)
+                {
+                    log.Error($"Customer for AccountId: {accountId} not found.");
+                    return NotFound($"Customer for AccountId: {accountId} not found.");
+                }
+
+                // Use the ChangePinDto values for the pin change operation
+                var result = await _accountRepository.ChangePin(accountId, changePinDto.OldPin, changePinDto.NewPin);
+                log.Info($"PIN change successful for AccountId: {accountId}");
+
+                // Send a notification email
+                string customerName = $"{customer.FirstName} {customer.LastName}";
+                string customerEmail = customer.Email;
+
+                /*NotifyUser.NotifyUserByEmail(
                     customerName,
                     customerEmail,
                     "Bank Of Hogwarts PIN Change Confirmation",
-                    $"Dear {customerName}, your PIN has been successfully changed for your account (ID: {id}). If this was not you, please contact support immediately.");
+                    $"Dear {customerName}, your PIN has been successfully changed for your account (ID: {accountId}). If this was not you, please contact support immediately."
+                );*/
 
                 return Ok(result);
             }
             catch (ArgumentException ex)
             {
-                log.Error($"Error during PIN change for AccountId: {id}, Message: {ex.Message}");
+                log.Error($"Error during PIN change for AccountId: {accountId}, Message: {ex.Message}");
+                return BadRequest(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                log.Error($"Invalid operation during PIN change for AccountId: {accountId}, Message: {ex.Message}");
                 return BadRequest(ex.Message);
             }
         }
+
 
 
         [HttpPost("{id}/add-beneficiary")]
@@ -322,15 +507,49 @@ namespace BankOfHogwarts.Controllers
             return Ok(beneficiaries);
         }
 
+     
+       
         [HttpPost("{accountId}/request-deactivation")]
-        public async Task<IActionResult> RequestDeactivation(int accountId)
+        public async Task<IActionResult> RequestDeactivation(int accountId, [FromBody] DeactivationRequestDto deactivationRequestDto)
         {
-            var result = await _accountRepository.RequestDeactivation(accountId);
+            if (deactivationRequestDto == null)
+            {
+                log.Error("Deactivation request data is missing.");
+                return BadRequest("Invalid request data.");
+            }
 
-            if (!result)
-                return BadRequest("Deactivation request failed. Account may already be inactive or does not exist.");
+            if (accountId != deactivationRequestDto.AccountId)
+            {
+                log.Error($"Account ID mismatch. URL ID: {accountId}, DTO ID: {deactivationRequestDto.AccountId}");
+                return BadRequest("Account ID in the URL does not match the Account ID in the request body.");
+            }
 
-            return Ok("Deactivation request submitted successfully.");
+            if (string.IsNullOrWhiteSpace(deactivationRequestDto.Pin))
+            {
+                log.Error("PIN cannot be empty.");
+                return BadRequest("PIN is required for deactivation request.");
+            }
+
+            try
+            {
+                // Call the repository method with the AccountId and Pin from the DTO
+                var result = await _accountRepository.RequestDeactivation(deactivationRequestDto.AccountId, deactivationRequestDto.Pin);
+
+                if (!result)
+                {
+                    log.Warn($"Deactivation request failed for AccountId: {accountId}");
+                    return BadRequest("Deactivation request failed. Account may already be inactive or does not exist.");
+                }
+
+                log.Info($"Deactivation request submitted successfully for AccountId: {accountId}");
+                return Ok("Deactivation request submitted successfully.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                log.Error($"Deactivation request failed for AccountId: {accountId}. Reason: {ex.Message}");
+                return BadRequest(ex.Message);
+            }
         }
+
     }
 }

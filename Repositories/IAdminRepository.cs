@@ -11,13 +11,14 @@ namespace BankOfHogwarts.Repositories
         Task<Employee?> GetEmployeeById(int id);
         Task<Employee> AddEmployee(Employee employee);
         Task<Employee> UpdateEmployee(Employee employee);
-        Task DeleteEmployee(int id);
+        Task<bool> DeactivateAccountAsync(int accountId);
 
         // Manage Customers
         Task<IEnumerable<Customer>> GetAllCustomers();
         Task<Customer?> GetCustomerById(int id);
         Task<Customer> AddCustomer(Customer customer);
         Task<Customer> UpdateCustomer(Customer customer);
-        Task DeleteCustomer(int id);
+        Task<bool> DeactivateCustomerAsync(int customerId);
+        Task<AdminDashboardReport> GenerateAdminDashboardReport();
     }
 }

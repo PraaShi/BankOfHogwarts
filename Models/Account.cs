@@ -46,6 +46,8 @@ namespace BankOfHogwarts.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
+        public DateTime ClosedAt { get; set; }
+
 
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public AccountStatus Status { get; set; } = AccountStatus.PendingApproval;

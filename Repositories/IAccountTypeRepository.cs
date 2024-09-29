@@ -9,5 +9,7 @@ namespace BankOfHogwarts.Repositories
     {
         // Display all Account Types
         Task<IEnumerable<AccountType>> DisplayAccountType();
+
+        Task<string> GetAccountTypeNameById(int accountTypeId);
     }
 }

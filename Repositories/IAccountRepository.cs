@@ -38,6 +38,6 @@ namespace BankOfHogwarts.Repositories
         // Method to get all beneficiaries by account ID
         Task<IEnumerable<Beneficiary>> GetBeneficiariesByAccountId(int accountId);
 
-        Task<bool> RequestDeactivation(int accountId);
+        Task<bool> RequestDeactivation(int accountId,string pin);
     }
 }

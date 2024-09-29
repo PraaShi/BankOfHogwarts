@@ -10,7 +10,7 @@ using BankOfHogwarts.DTOs;
 namespace BankOfHogwarts.Controllers
 {
     //[Authorize]
-    [Route("api/[controller]")]
+    [Route("api/account")]
     [ApiController]
     public class AdminController : ControllerBase
     {
@@ -81,9 +81,26 @@ namespace BankOfHogwarts.Controllers
             return Ok(updatedEmployee);
         }
 
+        //[Authorize(Roles = "Admin")]
+        [HttpPut("deactivate-account/{accountId}")]
+        public async Task<IActionResult> DeactivateAccount(int accountId)
+        {
+            // Call the repository function to deactivate the account
+            var result = await _adminRepository.DeactivateAccountAsync(accountId);
+
+            if (result)
+            {
+                return Ok(new { message = "Account deactivated successfully." });
+            }
+            else
+            {
+                return NotFound(new { message = "Account not found or already inactive." });
+            }
+        }
+
         // DELETE: api/Admin/Employees/{id}
         //[Authorize(Roles = "Admin")]
-        [HttpDelete("Employees/{id}")]
+        /*[HttpDelete("Employees/{id}")]
         public async Task<IActionResult> DeleteEmployee(int id)
         {
             log.Info($"Attempting to delete employee with ID: {id}");
@@ -99,7 +116,7 @@ namespace BankOfHogwarts.Controllers
                 log.Error($"Failed to delete employee with ID: {id}. Error: {ex.Message}");
                 return NotFound(new { message = ex.Message }); // Return HTTP 404 Not Found if employee does not exist
             }
-        }
+        }*/
 
 
         // Manage Customers
@@ -117,7 +134,7 @@ namespace BankOfHogwarts.Controllers
 
         // GET: api/Admin/Customers/{id}
         //[Authorize(Roles = "Admin")]
-        [HttpGet("Customers/{id}")]
+        [HttpGet("customers/{id}")]
         public async Task<ActionResult<Customer>> GetCustomerById(int id)
         {
             log.Info($"Fetching customer with ID: {id}");
@@ -186,15 +203,38 @@ namespace BankOfHogwarts.Controllers
             return Ok(updatedCustomer);
         }
 
+        [HttpGet("dashboard-report")]
+        public async Task<IActionResult> GetDashboardReport()
+        {
+            var report = await _adminRepository.GenerateAdminDashboardReport();
+            return Ok(report);
+        }
+
+        [HttpPut("deactivate-customer/{customerId}")]
+        public async Task<IActionResult> DeactivateCustomer(int customerId)
+        {
+            // Call the repository function to deactivate the customer
+            var result = await _adminRepository.DeactivateCustomerAsync(customerId);
+
+            if (result)
+            {
+                return Ok(new { message = "Customer deactivated successfully." });
+            }
+            else
+            {
+                return NotFound(new { message = "Customer not found or already inactive." });
+            }
+        }
+
         // DELETE: api/Admin/Customers/{id}
         //[Authorize(Roles = "Admin")]
-        [HttpDelete("Customers/{id}")]
+        /*[HttpDelete("Customers/{id}")]
         public async Task<IActionResult> DeleteCustomer(int id)
         {
             log.Info($"Deleting customer with ID: {id}");
             await _adminRepository.DeleteCustomer(id);
             log.Info($"Customer with ID: {id} deleted.");
             return NoContent();
-        }
+        }*/
     }
 }

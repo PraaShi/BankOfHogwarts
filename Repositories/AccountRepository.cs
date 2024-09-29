@@ -515,21 +515,21 @@ namespace BankOfHogwarts.Repositories
                                  .ToListAsync();
         }
 
-        public async Task<bool> RequestDeactivation(int accountId)
+        public async Task<bool> RequestDeactivation(int accountId,string pin)
         {
             var account = await _context.Accounts
                .Include(a => a.Loans)  // Include the related Loans
-               .FirstOrDefaultAsync(a => a.AccountId == accountId);
+               .FirstOrDefaultAsync(a => a.AccountId == accountId && a.PIN.ToString() == pin);
 
             if (account == null)
-                return false;
+                throw new InvalidOperationException("Invalid account ID or PIN. Please provide correct details.");
 
 
             // Check if the account is already inactive
             if (account.Status == AccountStatus.Inactive)
                 throw new InvalidOperationException("Account is inactive already");
 
-            if (account.Loans.Any(l => l.LoanStatus != LoanStatus.Closed))
+            if (account.Loans.Any(l => l.LoanFinalStatus != LoanFinalStatus.Closed))
             {
                 throw new InvalidOperationException("Account cannot be deleted because it has Active loans.");
             }

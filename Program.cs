@@ -172,6 +172,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -207,7 +208,7 @@ namespace BankOfHogwarts
                 .AddJsonOptions(options =>
                 {
                     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-                    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve; // to avoid cycle issues
+                    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve; // to avoid cycle issues
                 });
 
             // Add CORS policy
@@ -222,14 +223,15 @@ namespace BankOfHogwarts
                 });
             });
 
+            // Configure Swagger
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(opt =>
             {
-                opt.SwaggerDoc("v1", new OpenApiInfo { Title = "MyAPI", Version = "v1" });
+                opt.SwaggerDoc("v1", new OpenApiInfo { Title = "Bank of Hogwarts API", Version = "v1" });
                 opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
                     In = ParameterLocation.Header,
-                    Description = "Please enter token",
+                    Description = "Enter your Bearer token",
                     Name = "Authorization",
                     Type = SecuritySchemeType.Http,
                     BearerFormat = "JWT",
@@ -243,11 +245,11 @@ namespace BankOfHogwarts
                         {
                             Reference = new OpenApiReference
                             {
-                                Type=ReferenceType.SecurityScheme,
-                                Id="Bearer"
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
                             }
                         },
-                        new string[]{}
+                        new string[] {}
                     }
                 });
             });
@@ -268,13 +270,13 @@ namespace BankOfHogwarts
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
                     ValidateIssuer = true,
                     ValidateAudience = true,
-                    ValidateLifetime = true, // Set to true to validate the token's expiration time
+                    ValidateLifetime = true,
                     ValidateIssuerSigningKey = true
                 };
             });
 
             // Configure Log4Net
-            var logRepository = LogManager.GetRepository(System.Reflection.Assembly.GetEntryAssembly());
+            var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
             XmlConfigurator.Configure(logRepository, new FileInfo("web.config"));
 
             builder.Services.AddAuthorization();
@@ -289,7 +291,6 @@ namespace BankOfHogwarts
             }
 
             app.UseHttpsRedirection();
-
             app.UseCors("AllowReactApp"); // Apply CORS policy
 
             app.UseAuthentication(); // Authentication is enforced
@@ -301,3 +302,4 @@ namespace BankOfHogwarts
         }
     }
 }
+

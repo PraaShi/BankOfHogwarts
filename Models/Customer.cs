@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using BankOfHogwarts.Models.Enums;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.CodeAnalysis;
@@ -58,6 +59,9 @@ namespace BankOfHogwarts.Models
 
         [Required]
         public string Password { get; set; }
+
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public CustomerStatus Status { get; set; } = CustomerStatus.Active;
 
 
         // Navigation properties

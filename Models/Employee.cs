@@ -18,6 +18,10 @@ namespace BankOfHogwarts.Models
         [StringLength(20)]
         public string LastName { get; set; }
 
+        [StringLength(6)]
+        [Required]
+        public string Gender { get; set; }
+
         [Required]
         [StringLength(30)]
         [EmailAddress]
@@ -35,6 +39,8 @@ namespace BankOfHogwarts.Models
         [StringLength(25)]
         public string Password { get; set; }
 
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public EmployeeStatus Status { get; set; } = EmployeeStatus.Active;
         public DateTime CreatedAt { get; set; } = DateTime.Now;
     }
 }

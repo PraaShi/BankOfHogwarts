@@ -9,7 +9,7 @@ namespace BankOfHogwarts.Controllers
 {
     //[Authorize]
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/customer")]
     public class CustomerController : ControllerBase
     {
         private readonly ICustomerRepository _customerRepository;

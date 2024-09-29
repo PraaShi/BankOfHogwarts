@@ -5,6 +5,7 @@
         Active,
         Inactive,
         PendingApproval,  // Add this status for pending accounts
+        OnHold,
         Closed
     }
 }

@@ -46,8 +46,13 @@ namespace   BankOfHogwarts.Models
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public LoanStatus LoanStatus { get; set; } // Enum for loan status
 
+        [Required]
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public LoanFinalStatus LoanFinalStatus { get; set; }
         public DateTime? ApprovedDate { get; set; }
 
         public DateTime? DisbursementDate { get; set; } // Date when the Amount was sent
+
+        public DateTime? ClosedDate { get; set; }
     }
 }

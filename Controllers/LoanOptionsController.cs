@@ -10,7 +10,7 @@ namespace BankOfHogwarts.Controllers
 {
     //[Authorize]
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/loanOptions")]
     public class LoanOptionsController : ControllerBase
     {
         private readonly ILoanOptionsRepository _loanOptionsRepository;
@@ -24,7 +24,7 @@ namespace BankOfHogwarts.Controllers
         }
 
         // Get all loan options
-        [HttpGet]
+        [HttpGet("allLoans")]
         public async Task<ActionResult<IEnumerable<LoanOptions>>> GetAllLoanOptions()
         {
             log.Info("Attempting to retrieve all loan options.");

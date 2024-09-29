@@ -1,4 +1,5 @@
 ﻿using BankOfHogwarts.Controllers;
+using BankOfHogwarts.DTOs;
 using BankOfHogwarts.Models;
 using BankOfHogwarts.Models.Enums;
 using log4net;
@@ -36,6 +37,38 @@ namespace BankOfHogwarts.Repositories
             return true;
         }
 
+        public async Task<IEnumerable<LoanHistoryDto>> GetAllLoans()
+        {
+            // Fetch all loans and include related LoanOptions table
+            var loansQuery = _context.Loans
+                .Include(l => l.LoanOptions) // Join with LoanOptions table
+                .AsQueryable(); // Ensure it remains IQueryable for further filtering
+
+            // Project into a DTO including the LoanOptions properties
+            var loans = await loansQuery
+                .Select(l => new LoanHistoryDto
+                {
+                    AccountId = l.AccountId,
+                    LoanId = l.LoanId,
+                    LoanType = l.LoanOptions.LoanType.ToString(), // Convert LoanType enum to string
+                    LoanAmount = l.LoanOptions.LoanAmount,
+                    InterestRate = l.LoanOptions.InterestRate,
+                    Tenure = l.LoanOptions.Tenure,
+                    Purpose = l.Purpose,
+                    ApplicationDate = l.ApplicationDate,
+                    LoanApplicationStatus = l.LoanApplicationStatus.ToString(),
+                    ApprovedDate = l.ApprovedDate,
+                    LoanStatus = l.LoanStatus.ToString(), // Convert enums to string
+                    DisbursementDate = l.DisbursementDate,
+                    LoanFinalStatus = l.LoanFinalStatus,
+                    ClosedDate = l.ClosedDate,
+                    Remarks = l.Remarks
+                })
+                .ToListAsync();
+
+            return loans;
+        }
+
 
         public async Task<bool> ManageLoanRequest(int loanId, bool isApproved, int employeeId)
         {
@@ -59,7 +92,8 @@ namespace BankOfHogwarts.Repositories
             {
                 // If not approved, mark it as Rejected and Closed
                 loan.LoanApplicationStatus = LoanApplicationStatus.Rejected;
-                loan.LoanStatus = LoanStatus.Closed;
+                loan.LoanStatus = LoanStatus.Rejected;
+                loan.LoanFinalStatus = LoanFinalStatus.Closed;
             }
 
             // Update the loan in the database
@@ -107,6 +141,7 @@ namespace BankOfHogwarts.Repositories
             {
                 // Update loan status to Disbursed
                 loan.LoanStatus = LoanStatus.Disbursed;
+                loan.LoanFinalStatus = LoanFinalStatus.Active;
                 loan.DisbursementDate = DateTime.Now;
 
                 // Update account balance by adding the loan amount from LoanOptions
@@ -134,7 +169,8 @@ namespace BankOfHogwarts.Repositories
                 // If not approved, mark the loan as Rejected and Closed
                 Console.WriteLine($"Rejecting loan {loanId}.");
                 loan.LoanApplicationStatus = LoanApplicationStatus.Rejected;
-                loan.LoanStatus = LoanStatus.Closed;
+                loan.LoanStatus = LoanStatus.Rejected;
+                loan.LoanFinalStatus = LoanFinalStatus.Closed;
             }
 
             // Save the changes in the database
@@ -171,7 +207,7 @@ namespace BankOfHogwarts.Repositories
             return await transactions.ToListAsync();
         }
 
-        public async Task<bool> ManageAccountDeletionRequest(int accountId)
+        /*public async Task<bool> ManageAccountDeletionRequest(int accountId)
         {
             // Find the account along with any related loans
             var account = await _context.Accounts
@@ -193,7 +229,7 @@ namespace BankOfHogwarts.Repositories
             await _context.SaveChangesAsync();
 
             return true; // Account deleted successfully
-        }
+        }*/
         public class FinancialReport
         {
             public decimal TotalDeposits { get; set; }
@@ -279,28 +315,78 @@ namespace BankOfHogwarts.Repositories
             };
         }
 
-        public async Task<bool> DeactivateAccount(int accountId)
+        public async Task<IEnumerable<Account>> GetAllAccountsAsync()
+        {
+            return await _context.Accounts
+                .Include(a => a.Customer)
+                .Include(a => a.AccountType)
+                .Include(a => a.Branch)
+                .Select(a => new Account
+                {
+                    AccountId = a.AccountId,
+                    CustomerId = a.CustomerId,
+                    Customer = a.Customer,
+                    AccountTypeId = a.AccountTypeId,
+                    AccountType = a.AccountType,
+                    BranchId = a.BranchId,
+                    Branch = a.Branch,
+                    AccountNumber = a.AccountNumber,
+                    Balance = a.Balance,
+                    CIBILScore = a.CIBILScore,
+                    CreatedAt = a.CreatedAt,
+                    Status = a.Status
+                }).ToListAsync();
+        }
+        public async Task<IEnumerable<Account>> GetAccountsByStatusAsync(AccountStatus? status)
+        {
+            var query = _context.Accounts.AsQueryable();
+
+            if (status.HasValue)
+            {
+                query = query.Where(a => a.Status == status.Value);
+            }
+
+            return await query.ToListAsync();
+        }
+
+
+        public async Task<bool> DeactivateAccount(int accountId, bool isApproved)
         {
             var account = await _context.Accounts
                 .Include(a => a.Loans)
                 .FirstOrDefaultAsync(a => a.AccountId == accountId);
 
             if (account == null)
-                throw new InvalidOperationException("Account Not found");
+            {
+                Console.WriteLine("Account not found");
+                return false;
+            }
+            if (account.Status == AccountStatus.Closed)
+                throw new InvalidOperationException("Account is closed already.");
 
             // Check if any loans are active (based on your business logic, for example)
-            if (account.Loans.Any(l => l.LoanStatus != LoanStatus.Closed))
+            if (account.Loans.Any(l => l.LoanFinalStatus != LoanFinalStatus.Closed))
             {
                 throw new InvalidOperationException("Account cannot be deleted because it has Active loans.");
             }
-
-            if (account.Status == AccountStatus.PendingApproval)
+            if (isApproved)
             {
-                account.Status = AccountStatus.Closed;
-                await _context.SaveChangesAsync();
-                return true;
+                if (account.Status == AccountStatus.OnHold)
+                {
+                    account.Status = AccountStatus.Closed;
+                    Console.WriteLine($"Accepting Deactivation Request {accountId}.");
+                    await _context.SaveChangesAsync();
+                }
             }
-            return false;
+            else
+            {
+                // If not approved, mark the loan as Rejected and Closed
+                Console.WriteLine($"Rejecting Deactivation Request {accountId}.");
+                account.Status = AccountStatus.Active;
+            }
+            _context.Accounts.Update(account);
+            await _context.SaveChangesAsync();
+            return true;
         }
         public async Task<bool> CloseLoans(int loanId)
         {
@@ -313,11 +399,8 @@ namespace BankOfHogwarts.Repositories
             if (loan == null)
                 return false; // Loan not found
 
-            // Set the loan status to Closed
-            loan.LoanStatus = LoanStatus.Closed;
-
-            // Set the loan application status to Rejected
-            loan.LoanApplicationStatus = LoanApplicationStatus.Rejected;
+            loan.LoanFinalStatus = LoanFinalStatus.Closed;
+            loan.ClosedDate = DateTime.Now;
 
             await _context.SaveChangesAsync();
 
