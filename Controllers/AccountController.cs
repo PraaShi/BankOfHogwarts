@@ -130,11 +130,11 @@ namespace BankOfHogwarts.Controllers
                 string customerName = $"{customer.FirstName} {customer.LastName}";
                 string customerEmail = customer.Email;
 
-                /*NotifyUser.NotifyUserByEmail(
+                NotifyUser.NotifyUserByEmail(
                     customerName,
                     customerEmail,
                     "Bank Of Hogwarts Deposit Confirmation",
-                    $"Dear {customerName}, your deposit of {depositFundsDto.Amount:C} has been successfully processed.");*/
+                    $"Dear {customerName}, your deposit of {depositFundsDto.Amount:C} has been successfully processed.");
 
                 return Ok(transaction);
             }
